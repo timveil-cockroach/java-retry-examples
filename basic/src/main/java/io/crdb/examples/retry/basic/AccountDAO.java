@@ -13,6 +13,10 @@ public class AccountDAO {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
+    private static final int MAX_RETRY_COUNT = 3;
+    private static final String SAVEPOINT_NAME = "cockroach_restart";
+    private static final String RETRY_SQL_STATE = "40001";
+
     private DataSource ds;
 
     public AccountDAO(DataSource ds) {
@@ -26,9 +30,11 @@ public class AccountDAO {
 
             connection.setAutoCommit(false);
 
-            while (true) {
+            int retryCount = 0;
 
-                Savepoint sp = connection.setSavepoint("cockroach_restart");
+            while (retryCount < MAX_RETRY_COUNT) {
+
+                Savepoint sp = connection.setSavepoint(SAVEPOINT_NAME);
 
                 try (PreparedStatement statement = connection.prepareStatement("UPDATE account SET balance = ? WHERE id = ?")) {
 
@@ -44,10 +50,9 @@ public class AccountDAO {
 
                 } catch (SQLException e) {
 
-                    String sqlState = e.getSQLState();
-
-                    if ("40001".equals(sqlState)) {
+                    if (RETRY_SQL_STATE.equals(e.getSQLState())) {
                         connection.rollback(sp);
+                        retryCount++;
                     } else {
                         throw e;
                     }
