@@ -2,7 +2,7 @@ package io.crdb.examples.retry.basic;
 
 import java.util.UUID;
 
-public class Account {
+public class BasicExample {
 
     private UUID id;
 

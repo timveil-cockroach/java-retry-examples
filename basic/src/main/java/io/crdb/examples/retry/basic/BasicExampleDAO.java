@@ -9,7 +9,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Savepoint;
 
-public class AccountDAO {
+public class BasicExampleDAO {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -19,12 +19,12 @@ public class AccountDAO {
 
     private DataSource ds;
 
-    public AccountDAO(DataSource ds) {
+    public BasicExampleDAO(DataSource ds) {
         this.ds = ds;
     }
 
 
-    public void update(Account account) {
+    public void update(BasicExample basicExample) {
 
         try (Connection connection = ds.getConnection()) {
 
@@ -36,10 +36,10 @@ public class AccountDAO {
 
                 Savepoint sp = connection.setSavepoint(SAVEPOINT_NAME);
 
-                try (PreparedStatement statement = connection.prepareStatement("UPDATE account SET balance = ? WHERE id = ?")) {
+                try (PreparedStatement statement = connection.prepareStatement("UPDATE basic_example SET balance = ? WHERE id = ?")) {
 
-                    statement.setInt(1, account.getBalance());
-                    statement.setObject(2, account.getId());
+                    statement.setInt(1, basicExample.getBalance());
+                    statement.setObject(2, basicExample.getId());
                     statement.executeUpdate();
 
                     connection.releaseSavepoint(sp);
@@ -64,7 +64,22 @@ public class AccountDAO {
             connection.setAutoCommit(true);
 
         } catch (SQLException e) {
-            log.error(String.format("an unexpected error occurred: %s", e.getMessage()), e);
+            log.error(String.format("an unexpected error occurred during update: %s", e.getMessage()), e);
+        }
+    }
+
+
+    public void create(BasicExample basicExample) {
+
+        try (Connection connection = ds.getConnection();
+             PreparedStatement statement = connection.prepareStatement("INSERT INTO basic_example(id,balance) VALUES(?,?)")) {
+
+            statement.setObject(1, basicExample.getId());
+            statement.setInt(2, basicExample.getBalance());
+            statement.executeUpdate();
+
+        } catch (SQLException e) {
+            log.error(String.format("an unexpected error occurred during create: %s", e.getMessage()), e);
         }
     }
 

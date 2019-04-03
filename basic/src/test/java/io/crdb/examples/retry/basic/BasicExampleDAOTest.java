@@ -20,7 +20,7 @@ import static org.mockito.Mockito.startsWith;
 import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
-public class AccountDAOTest {
+public class BasicExampleDAOTest {
 
     @Mock
     private DataSource ds;
@@ -51,11 +51,11 @@ public class AccountDAOTest {
     @Test
     public void update() {
 
-        Account account = new Account();
-        account.setId(UUID.randomUUID());
-        account.setBalance(100);
+        BasicExample basicExample = new BasicExample();
+        basicExample.setId(UUID.randomUUID());
+        basicExample.setBalance(100);
 
-        new AccountDAO(ds).update(account);
+        new BasicExampleDAO(ds).update(basicExample);
     }
 
 }
