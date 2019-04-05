@@ -29,7 +29,7 @@ class BasicExampleHarness {
         // Create DAO
         final BasicExampleDAO dao = new BasicExampleDAO(ds);
 
-        // Insert BasicExample
+        // Insert into Table
         dao.insert(UUID.randomUUID(), ThreadLocalRandom.current().nextInt(0, 1000));
 
     }
