@@ -37,19 +37,16 @@ public class BasicExampleDAOTest {
     @Before
     public void setUp() throws Exception {
         assertNotNull(ds);
-
         when(ds.getConnection()).thenReturn(c);
-
-        when(c.prepareStatement(startsWith("INSERT"))).thenReturn(stmt);
-
-        when(c.setSavepoint(anyString())).thenReturn(sp);
-
-        when(stmt.executeUpdate()).thenThrow(new SQLException("mock retry", "40001", 99, null)).thenReturn(1);
     }
 
 
     @Test
-    public void insert() {
+    public void insert() throws SQLException {
+
+        when(c.prepareStatement(startsWith("INSERT"))).thenReturn(stmt);
+        when(c.setSavepoint(anyString())).thenReturn(sp);
+        when(stmt.executeUpdate()).thenThrow(new SQLException("mock retry", "40001", 99, null)).thenReturn(1);
 
         BasicExample basicExample = new BasicExample();
         basicExample.setId(UUID.randomUUID());
