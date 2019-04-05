@@ -24,7 +24,7 @@ public class BasicExampleDAO {
     }
 
 
-    public void update(BasicExample basicExample) {
+    public void insert(BasicExample basicExample) {
 
         try (Connection connection = ds.getConnection()) {
 
@@ -36,10 +36,10 @@ public class BasicExampleDAO {
 
                 Savepoint sp = connection.setSavepoint(SAVEPOINT_NAME);
 
-                try (PreparedStatement statement = connection.prepareStatement("UPDATE basic_example SET balance = ? WHERE id = ?")) {
+                try (PreparedStatement statement = connection.prepareStatement("INSERT INTO basic_example(id,balance) VALUES(?,?)")) {
 
-                    statement.setInt(1, basicExample.getBalance());
-                    statement.setObject(2, basicExample.getId());
+                    statement.setObject(1, basicExample.getId());
+                    statement.setInt(2, basicExample.getBalance());
                     statement.executeUpdate();
 
                     connection.releaseSavepoint(sp);
@@ -64,22 +64,7 @@ public class BasicExampleDAO {
             connection.setAutoCommit(true);
 
         } catch (SQLException e) {
-            log.error(String.format("an unexpected error occurred during update: %s", e.getMessage()), e);
-        }
-    }
-
-
-    public void create(BasicExample basicExample) {
-
-        try (Connection connection = ds.getConnection();
-             PreparedStatement statement = connection.prepareStatement("INSERT INTO basic_example(id,balance) VALUES(?,?)")) {
-
-            statement.setObject(1, basicExample.getId());
-            statement.setInt(2, basicExample.getBalance());
-            statement.executeUpdate();
-
-        } catch (SQLException e) {
-            log.error(String.format("an unexpected error occurred during create: %s", e.getMessage()), e);
+            log.error(String.format("an unexpected error occurred during insert: %s", e.getMessage()), e);
         }
     }
 

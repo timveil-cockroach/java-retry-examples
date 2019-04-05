@@ -40,7 +40,7 @@ public class BasicExampleDAOTest {
 
         when(ds.getConnection()).thenReturn(c);
 
-        when(c.prepareStatement(startsWith("UPDATE"))).thenReturn(stmt);
+        when(c.prepareStatement(startsWith("INSERT"))).thenReturn(stmt);
 
         when(c.setSavepoint(anyString())).thenReturn(sp);
 
@@ -49,13 +49,13 @@ public class BasicExampleDAOTest {
 
 
     @Test
-    public void update() {
+    public void insert() {
 
         BasicExample basicExample = new BasicExample();
         basicExample.setId(UUID.randomUUID());
         basicExample.setBalance(100);
 
-        new BasicExampleDAO(ds).update(basicExample);
+        new BasicExampleDAO(ds).insert(basicExample);
     }
 
 }

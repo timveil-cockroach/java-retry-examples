@@ -36,12 +36,7 @@ public class BasicExampleHarness {
         basicExample.setBalance(ThreadLocalRandom.current().nextInt(0, 1000));
 
         // Insert BasicExample
-        dao.create(basicExample);
-
-
-        // Update BasicExample with Retry
-        basicExample.setBalance(99999);
-        dao.update(basicExample);
+        dao.insert(basicExample);
 
     }
 }
