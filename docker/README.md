@@ -22,9 +22,19 @@ docker-compose exec roach-0 /cockroach/cockroach sql --insecure --execute="CREAT
 ```
 
 ### Open Interactive Shells
+
+With `docker`
 ```bash
 docker exec -ti roach-0 /bin/bash
 docker exec -ti roach-1 /bin/bash
 docker exec -ti roach-2 /bin/bash
-docker exec -ti lb /bin/bash
+docker exec -ti lb /bin/sh
+```
+
+With `docker-compose`
+```bash
+docker-compose exec roach-0 /bin/bash
+docker-compose exec roach-1 /bin/bash
+docker-compose exec roach-2 /bin/bash
+docker-compose exec lb /bin/sh
 ```
