@@ -10,7 +10,7 @@ import java.util.concurrent.ThreadLocalRandom;
 
 public class BasicExampleHarness {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws SQLException {
 
         // Create DataSource
         final PGSimpleDataSource ds = new PGSimpleDataSource();
@@ -25,25 +25,22 @@ public class BasicExampleHarness {
         try (Connection connection = ds.getConnection();
              PreparedStatement statement = connection.prepareStatement("CREATE TABLE IF NOT EXISTS basic_example(id UUID PRIMARY KEY, balance INT)")) {
             statement.executeUpdate();
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
 
         // Create DAO
         BasicExampleDAO dao = new BasicExampleDAO(ds);
 
+        // Create BasicExample
         BasicExample basicExample = new BasicExample();
         basicExample.setId(UUID.randomUUID());
         basicExample.setBalance(ThreadLocalRandom.current().nextInt(0, 1000));
 
-
         // Insert BasicExample
         dao.create(basicExample);
 
-        basicExample.setBalance(99999);
-
 
         // Update BasicExample with Retry
+        basicExample.setBalance(99999);
         dao.update(basicExample);
 
     }
