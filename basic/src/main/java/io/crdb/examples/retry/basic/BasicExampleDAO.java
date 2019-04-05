@@ -8,6 +8,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Savepoint;
+import java.util.UUID;
 
 public class BasicExampleDAO {
 
@@ -24,7 +25,7 @@ public class BasicExampleDAO {
     }
 
 
-    public void insert(BasicExample basicExample) {
+    public void insert(UUID id, int balance) {
 
         try (Connection connection = ds.getConnection()) {
 
@@ -38,8 +39,8 @@ public class BasicExampleDAO {
 
                 try (PreparedStatement statement = connection.prepareStatement("INSERT INTO basic_example(id,balance) VALUES(?,?)")) {
 
-                    statement.setObject(1, basicExample.getId());
-                    statement.setInt(2, basicExample.getBalance());
+                    statement.setObject(1, id);
+                    statement.setInt(2, balance);
                     statement.executeUpdate();
 
                     connection.releaseSavepoint(sp);

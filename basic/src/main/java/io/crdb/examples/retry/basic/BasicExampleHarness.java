@@ -20,7 +20,6 @@ public class BasicExampleHarness {
         ds.setUser("root");
         ds.setPassword(null);
 
-
         // Create Table
         try (Connection connection = ds.getConnection();
              PreparedStatement statement = connection.prepareStatement("CREATE TABLE IF NOT EXISTS basic_example(id UUID PRIMARY KEY, balance INT)")) {
@@ -30,13 +29,8 @@ public class BasicExampleHarness {
         // Create DAO
         BasicExampleDAO dao = new BasicExampleDAO(ds);
 
-        // Create BasicExample
-        BasicExample basicExample = new BasicExample();
-        basicExample.setId(UUID.randomUUID());
-        basicExample.setBalance(ThreadLocalRandom.current().nextInt(0, 1000));
-
         // Insert BasicExample
-        dao.insert(basicExample);
+        dao.insert(UUID.randomUUID(), ThreadLocalRandom.current().nextInt(0, 1000));
 
     }
 }
