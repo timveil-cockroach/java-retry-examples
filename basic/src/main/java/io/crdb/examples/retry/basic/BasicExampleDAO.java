@@ -10,7 +10,7 @@ import java.sql.SQLException;
 import java.sql.Savepoint;
 import java.util.UUID;
 
-public class BasicExampleDAO {
+class BasicExampleDAO {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -18,14 +18,14 @@ public class BasicExampleDAO {
     private static final String SAVEPOINT_NAME = "cockroach_restart";
     private static final String RETRY_SQL_STATE = "40001";
 
-    private DataSource ds;
+    private final DataSource ds;
 
-    public BasicExampleDAO(DataSource ds) {
+    BasicExampleDAO(DataSource ds) {
         this.ds = ds;
     }
 
 
-    public void insert(UUID id, int balance) {
+    void insert(UUID id, int balance) {
 
         try (Connection connection = ds.getConnection()) {
 

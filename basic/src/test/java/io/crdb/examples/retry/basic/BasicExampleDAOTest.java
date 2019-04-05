@@ -40,7 +40,6 @@ public class BasicExampleDAOTest {
         when(ds.getConnection()).thenReturn(c);
     }
 
-
     @Test
     public void insert() throws SQLException {
 

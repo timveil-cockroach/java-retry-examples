@@ -8,7 +8,7 @@ import java.sql.SQLException;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
-public class BasicExampleHarness {
+class BasicExampleHarness {
 
     public static void main(String[] args) throws SQLException {
 
@@ -27,7 +27,7 @@ public class BasicExampleHarness {
         }
 
         // Create DAO
-        BasicExampleDAO dao = new BasicExampleDAO(ds);
+        final BasicExampleDAO dao = new BasicExampleDAO(ds);
 
         // Insert BasicExample
         dao.insert(UUID.randomUUID(), ThreadLocalRandom.current().nextInt(0, 1000));
