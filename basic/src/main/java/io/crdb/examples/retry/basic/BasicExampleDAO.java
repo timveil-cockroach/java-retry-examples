@@ -24,7 +24,6 @@ class BasicExampleDAO {
         this.ds = ds;
     }
 
-
     void insert(UUID id, int balance) {
 
         try (Connection connection = ds.getConnection()) {
@@ -57,9 +56,7 @@ class BasicExampleDAO {
                     } else {
                         throw e;
                     }
-
                 }
-
             }
 
             connection.setAutoCommit(true);
@@ -68,5 +65,4 @@ class BasicExampleDAO {
             log.error(String.format("an unexpected error occurred during insert: %s", e.getMessage()), e);
         }
     }
-
 }
