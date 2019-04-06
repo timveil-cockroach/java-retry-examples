@@ -1,14 +1,11 @@
 package io.crdb.examples.retry.spring.jdbc;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Profile;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
-import javax.sql.DataSource;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -17,22 +14,20 @@ import java.util.concurrent.ThreadLocalRandom;
 public class SpringJdbcTemplateApplicationRunner implements ApplicationRunner {
 
     private final SpringJdbcTemplateExampleDAO dao;
-    private final DataSource dataSource;
+    private final JdbcTemplate jdbcTemplate;
 
-    @Autowired
-    public SpringJdbcTemplateApplicationRunner(SpringJdbcTemplateExampleDAO dao, DataSource dataSource) {
+    public SpringJdbcTemplateApplicationRunner(SpringJdbcTemplateExampleDAO dao, JdbcTemplate jdbcTemplate) {
         this.dao = dao;
-        this.dataSource = dataSource;
+        this.jdbcTemplate = jdbcTemplate;
     }
 
     @Override
-    public void run(ApplicationArguments args) throws Exception {
+    public void run(ApplicationArguments args) {
 
         // Create Table
-        try (Connection connection = dataSource.getConnection();
-             PreparedStatement statement = connection.prepareStatement("CREATE TABLE IF NOT EXISTS spring_jdbc_template(id UUID PRIMARY KEY, balance INT)")) {
-            statement.executeUpdate();
-        }
+
+        jdbcTemplate.execute("CREATE TABLE IF NOT EXISTS spring_jdbc_template(id UUID PRIMARY KEY, balance INT)");
+
 
         // Insert into Table
         dao.insert(UUID.randomUUID(), ThreadLocalRandom.current().nextInt(0, 1000));

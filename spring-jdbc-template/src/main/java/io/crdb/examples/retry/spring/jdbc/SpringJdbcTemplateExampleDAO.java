@@ -3,9 +3,11 @@ package io.crdb.examples.retry.spring.jdbc;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessException;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.PreparedStatementCallback;
 import org.springframework.stereotype.Component;
 
-import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -17,56 +19,23 @@ class SpringJdbcTemplateExampleDAO {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private static final int MAX_RETRY_COUNT = 3;
-    private static final String SAVEPOINT_NAME = "cockroach_restart";
-    private static final String RETRY_SQL_STATE = "40001";
-
-    private final DataSource ds;
+    private final JdbcTemplate jdbcTemplate;
 
     @Autowired
-    SpringJdbcTemplateExampleDAO(DataSource ds) {
-        this.ds = ds;
+    public SpringJdbcTemplateExampleDAO(JdbcTemplate jdbcTemplate) {
+        this.jdbcTemplate = jdbcTemplate;
     }
 
     void insert(UUID id, int balance) {
 
-        try (Connection connection = ds.getConnection()) {
-
-            connection.setAutoCommit(false);
-
-            int retryCount = 0;
-
-            while (retryCount < MAX_RETRY_COUNT) {
-
-                Savepoint sp = connection.setSavepoint(SAVEPOINT_NAME);
-
-                try (PreparedStatement statement = connection.prepareStatement("INSERT INTO spring_jdbc_template(id,balance) VALUES(?,?)")) {
-
-                    statement.setObject(1, id);
-                    statement.setInt(2, balance);
-                    statement.executeUpdate();
-
-                    connection.releaseSavepoint(sp);
-
-                    connection.commit();
-
-                    break;
-
-                } catch (SQLException e) {
-
-                    if (RETRY_SQL_STATE.equals(e.getSQLState())) {
-                        connection.rollback(sp);
-                        retryCount++;
-                    } else {
-                        throw e;
-                    }
-                }
+        jdbcTemplate.execute("INSERT INTO spring_jdbc_template(id,balance) VALUES(?,?)", new PreparedStatementCallback<Integer>() {
+            @Override
+            public Integer doInPreparedStatement(PreparedStatement preparedStatement) throws SQLException, DataAccessException {
+                preparedStatement.setObject(1, id);
+                preparedStatement.setInt(2, balance);
+                return preparedStatement.executeUpdate();
             }
+        });
 
-            connection.setAutoCommit(true);
-
-        } catch (SQLException e) {
-            log.error(String.format("an unexpected error occurred during insert: %s", e.getMessage()), e);
-        }
     }
 }
