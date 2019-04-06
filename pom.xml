@@ -35,6 +35,7 @@
     <modules>
         <module>basic</module>
         <module>spring-jdbc</module>
+        <module>spring-jdbc-template</module>
     </modules>
 
 
