@@ -6,14 +6,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.PreparedStatementCallback;
+import org.springframework.jdbc.core.RowCallbackHandler;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Savepoint;
-import java.util.UUID;
 
 @Component
 class SpringJdbcTemplateExampleDAO {
@@ -28,14 +27,21 @@ class SpringJdbcTemplateExampleDAO {
     }
 
     @Transactional
-    void insert(UUID id, int balance) {
+    void retryable() {
 
-        jdbcTemplate.execute("INSERT INTO spring_jdbc_template(id,balance) VALUES(?,?)", new PreparedStatementCallback<Integer>() {
+        jdbcTemplate.query("select 1", new RowCallbackHandler() {
             @Override
-            public Integer doInPreparedStatement(PreparedStatement preparedStatement) throws SQLException, DataAccessException {
-                preparedStatement.setObject(1, id);
-                preparedStatement.setInt(2, balance);
-                return preparedStatement.executeUpdate();
+            public void processRow(ResultSet rs) throws SQLException {
+
+            }
+        });
+
+        jdbcTemplate.query("SELECT crdb_internal.force_retry('2m':::INTERVAL)", new RowCallbackHandler() {
+            @Override
+            public void processRow(ResultSet rs) throws SQLException {
+                if (rs.next()) {
+                    log.debug("query result [{}]", rs.getString(1));
+                }
             }
         });
 

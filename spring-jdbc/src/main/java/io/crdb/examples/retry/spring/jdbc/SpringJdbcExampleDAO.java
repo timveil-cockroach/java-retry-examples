@@ -6,10 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.sql.DataSource;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.sql.Savepoint;
+import java.sql.*;
 import java.util.UUID;
 
 @Component
@@ -17,7 +14,7 @@ class SpringJdbcExampleDAO {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private static final int MAX_RETRY_COUNT = 3;
+    private static final int MAX_RETRY_COUNT = 0;
     private static final String SAVEPOINT_NAME = "cockroach_restart";
     private static final String RETRY_SQL_STATE = "40001";
 
@@ -28,7 +25,7 @@ class SpringJdbcExampleDAO {
         this.ds = ds;
     }
 
-    void insert(UUID id, int balance) {
+    void retryable() {
 
         try (Connection connection = ds.getConnection()) {
 
@@ -36,15 +33,18 @@ class SpringJdbcExampleDAO {
 
             int retryCount = 0;
 
-            while (retryCount < MAX_RETRY_COUNT) {
+            while (MAX_RETRY_COUNT == 0 || retryCount < MAX_RETRY_COUNT) {
 
                 Savepoint sp = connection.setSavepoint(SAVEPOINT_NAME);
 
-                try (PreparedStatement statement = connection.prepareStatement("INSERT INTO spring_jdbc(id,balance) VALUES(?,?)")) {
+                forceRetry(connection);
 
-                    statement.setObject(1, id);
-                    statement.setInt(2, balance);
-                    statement.executeUpdate();
+                try (PreparedStatement statement = connection.prepareStatement("SELECT crdb_internal.force_retry('1s':::INTERVAL)");
+                     ResultSet resultSet = statement.executeQuery()) {
+
+                    if (resultSet.next()) {
+                        log.debug("query result = [{}]", resultSet.getString(1));
+                    }
 
                     connection.releaseSavepoint(sp);
 
@@ -55,6 +55,7 @@ class SpringJdbcExampleDAO {
                 } catch (SQLException e) {
 
                     if (RETRY_SQL_STATE.equals(e.getSQLState())) {
+                        log.debug("retryable exception occurred: sql state = [{}], message = [{}], retry counter = {}", e.getSQLState(), e.getMessage(), retryCount);
                         connection.rollback(sp);
                         retryCount++;
                     } else {
@@ -66,7 +67,14 @@ class SpringJdbcExampleDAO {
             connection.setAutoCommit(true);
 
         } catch (SQLException e) {
-            log.error(String.format("an unexpected error occurred during insert: %s", e.getMessage()), e);
+            log.error(String.format("an unexpected error occurred during retryable: %s", e.getMessage()), e);
+        }
+    }
+
+
+    private void forceRetry(Connection connection) throws SQLException {
+        try (PreparedStatement statement = connection.prepareStatement("select 1")){
+            statement.executeQuery();
         }
     }
 }

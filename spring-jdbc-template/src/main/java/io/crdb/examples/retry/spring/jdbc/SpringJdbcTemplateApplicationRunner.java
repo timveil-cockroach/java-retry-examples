@@ -14,20 +14,13 @@ import java.util.concurrent.ThreadLocalRandom;
 public class SpringJdbcTemplateApplicationRunner implements ApplicationRunner {
 
     private final SpringJdbcTemplateExampleDAO dao;
-    private final JdbcTemplate jdbcTemplate;
 
-    public SpringJdbcTemplateApplicationRunner(SpringJdbcTemplateExampleDAO dao, JdbcTemplate jdbcTemplate) {
+    public SpringJdbcTemplateApplicationRunner(SpringJdbcTemplateExampleDAO dao) {
         this.dao = dao;
-        this.jdbcTemplate = jdbcTemplate;
     }
 
     @Override
     public void run(ApplicationArguments args) {
-
-        // Create Table
-        jdbcTemplate.execute("CREATE TABLE IF NOT EXISTS spring_jdbc_template(id UUID PRIMARY KEY, balance INT)");
-
-        // Insert into Table
-        dao.insert(UUID.randomUUID(), ThreadLocalRandom.current().nextInt(0, 1000));
+        dao.retryable();
     }
 }

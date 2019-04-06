@@ -47,7 +47,7 @@ public class BasicExampleDAOTest {
         when(c.setSavepoint(anyString())).thenReturn(sp);
         when(stmt.executeUpdate()).thenThrow(new SQLException("mock retry", "40001", 99, null)).thenReturn(1);
 
-        new BasicExampleDAO(ds).insert(UUID.randomUUID(), 100);
+        new BasicExampleDAO(ds).retryable();
     }
 
 }

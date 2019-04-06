@@ -6,10 +6,7 @@ import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -55,7 +52,7 @@ public class SpringJdbcApplicationTests {
         when(c.setSavepoint(anyString())).thenReturn(sp);
         when(stmt.executeUpdate()).thenThrow(new SQLException("mock retry", "40001", 99, null)).thenReturn(1);
 
-        dao.insert(UUID.randomUUID(), 100);
+        dao.retryable();
     }
 
 }
