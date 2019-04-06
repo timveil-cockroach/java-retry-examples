@@ -37,6 +37,7 @@ class SpringJdbcExampleDAO {
 
                 Savepoint sp = connection.setSavepoint(SAVEPOINT_NAME);
 
+                // this method call is only used to test retry logic.  it is not necessary in production code;
                 forceRetry(connection);
 
                 try (PreparedStatement statement = connection.prepareStatement("SELECT crdb_internal.force_retry('1s':::INTERVAL)");
