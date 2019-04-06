@@ -25,9 +25,7 @@ public class SpringJdbcTemplateApplicationRunner implements ApplicationRunner {
     public void run(ApplicationArguments args) {
 
         // Create Table
-
         jdbcTemplate.execute("CREATE TABLE IF NOT EXISTS spring_jdbc_template(id UUID PRIMARY KEY, balance INT)");
-
 
         // Insert into Table
         dao.insert(UUID.randomUUID(), ThreadLocalRandom.current().nextInt(0, 1000));
