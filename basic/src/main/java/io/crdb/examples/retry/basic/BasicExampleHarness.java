@@ -20,7 +20,9 @@ class BasicExampleHarness {
         final BasicExampleDAO dao = new BasicExampleDAO(ds);
 
         // Generate Retry
-        dao.retryable();
+        for (int i=0; i<100; i++) {
+            dao.forceRetry();
+        }
 
     }
 }

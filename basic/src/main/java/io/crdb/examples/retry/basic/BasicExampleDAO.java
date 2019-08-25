@@ -5,6 +5,10 @@ import org.slf4j.LoggerFactory;
 
 import javax.sql.DataSource;
 import java.sql.*;
+import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 class BasicExampleDAO {
 
@@ -18,6 +22,146 @@ class BasicExampleDAO {
 
     BasicExampleDAO(DataSource ds) {
         this.ds = ds;
+    }
+
+    void forceRetry() {
+
+
+        UUID id = UUID.randomUUID();
+        int balance = 100;
+
+        try (Connection connection = ds.getConnection()) {
+
+            try (PreparedStatement statement = connection.prepareStatement("CREATE TABLE IF NOT EXISTS basic_example(id UUID PRIMARY KEY, balance INT)")) {
+                statement.executeUpdate();
+            }
+
+            try (PreparedStatement statement = connection.prepareStatement("INSERT INTO basic_example(id,balance) VALUES(?,?)")) {
+                statement.setObject(1, id);
+                statement.setInt(2, balance);
+                statement.executeUpdate();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        final ExecutorService executorService = Executors.newFixedThreadPool(2);
+
+        CountDownLatch countDownLatch = new CountDownLatch(2);
+
+        executorService.execute(new Runnable() {
+            @Override
+            public void run() {
+
+                try (Connection connection = ds.getConnection()) {
+                    try {
+                        connection.setAutoCommit(false);
+                    } catch (SQLException e) {
+                        e.printStackTrace();
+                    }
+
+                    try (PreparedStatement statement = connection.prepareStatement("select * from basic_example where id = ?")) {
+                        statement.setObject(1, id);
+                        statement.executeQuery();
+
+                        log.debug("select");
+                    } catch (SQLException e) {
+                        e.printStackTrace();
+                    }
+
+                    try {
+                        Thread.sleep(5000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+
+                    try (PreparedStatement statement = connection.prepareStatement("update basic_example set balance = ? where id = ?")) {
+                        statement.setInt(1, 99);
+                        statement.setObject(2, id);
+                        statement.executeUpdate();
+
+                        log.debug("first update");
+
+                    } catch (SQLException e) {
+                        e.printStackTrace();
+                    }
+
+                    try {
+                        connection.commit();
+                    } catch (SQLException e) {
+                        e.printStackTrace();
+                    }
+
+                    try {
+                        connection.setAutoCommit(true);
+                    } catch (SQLException e) {
+                        e.printStackTrace();
+                    }
+
+
+                    countDownLatch.countDown();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+
+        executorService.execute(new Runnable() {
+            @Override
+            public void run() {
+
+                try (Connection connection = ds.getConnection()) {
+                    try {
+                        connection.setAutoCommit(false);
+                    } catch (SQLException e) {
+                        e.printStackTrace();
+                    }
+
+                    try {
+                        Thread.sleep(2000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+
+
+                    try (PreparedStatement statement = connection.prepareStatement("update basic_example set balance = ? where id = ?")) {
+                        statement.setInt(1, 98);
+                        statement.setObject(2, id);
+                        statement.executeUpdate();
+
+                        log.debug("second update");
+                    } catch (SQLException e) {
+                        e.printStackTrace();
+                    }
+
+                    try {
+                        connection.commit();
+                    } catch (SQLException e) {
+                        e.printStackTrace();
+                    }
+
+                    try {
+                        connection.setAutoCommit(true);
+                    } catch (SQLException e) {
+                        e.printStackTrace();
+                    }
+
+                    countDownLatch.countDown();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+
+        try {
+            countDownLatch.await();
+        } catch (InterruptedException e) {
+            log.error(e.getMessage(), e);
+        }
+
+        log.debug("finished...{}", id);
+
+
     }
 
     void retryable() {
@@ -68,7 +212,7 @@ class BasicExampleDAO {
     }
 
     private void forceRetry(Connection connection) throws SQLException {
-        try (PreparedStatement statement = connection.prepareStatement("select 1")){
+        try (PreparedStatement statement = connection.prepareStatement("select 1")) {
             statement.executeQuery();
         }
     }
