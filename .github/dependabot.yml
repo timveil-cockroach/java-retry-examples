@@ -16,4 +16,4 @@ updates:
     schedule:
       interval: "daily"
     assignees:
-      - "timveil"s
+      - "timveil"
