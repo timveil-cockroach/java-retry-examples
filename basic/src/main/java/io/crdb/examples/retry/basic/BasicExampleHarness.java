@@ -11,8 +11,8 @@ class BasicExampleHarness {
         // Create DataSource
         final PGSimpleDataSource ds = new PGSimpleDataSource();
         ds.setServerName("localhost");
-        ds.setPortNumber(5432);
-        ds.setDatabaseName("examples");
+        ds.setPortNumber(26257);
+        ds.setDatabaseName("java_retry_examples");
         ds.setUser("root");
         ds.setPassword(null);
 
