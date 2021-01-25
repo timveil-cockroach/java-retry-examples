@@ -46,6 +46,6 @@ services:
     environment:
       - COCKROACH_HOST=lb:26257
       - COCKROACH_INSECURE=true
-      - DATABASE_NAME=java_retry_examples
+      - DATABASE_NAME=java_retry_example
     depends_on:
       - lb

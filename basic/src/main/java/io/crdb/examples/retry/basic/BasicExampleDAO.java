@@ -14,10 +14,22 @@ class BasicExampleDAO {
     private static final String SAVEPOINT_NAME = "cockroach_restart";
     private static final String RETRY_SQL_STATE = "40001";
 
+    private static final String VICTIM_QUERY =  "INSERT INTO users (name) VALUES (?)";
+    private static final String FORCE_RETRY =   "SELECT crdb_internal.force_retry('1s':::INTERVAL)";
+
     private final DataSource ds;
 
     BasicExampleDAO(DataSource ds) {
         this.ds = ds;
+    }
+
+    void createTable() {
+        try (Connection connection = ds.getConnection();
+             PreparedStatement statement = connection.prepareStatement("CREATE TABLE IF NOT EXISTS users ( id UUID NOT NULL DEFAULT gen_random_uuid(), name STRING )")) {
+            statement.executeUpdate();
+        } catch (SQLException e) {
+            log.error(e.getMessage(), e);
+        }
     }
 
     void retryable() {
@@ -26,21 +38,21 @@ class BasicExampleDAO {
 
             connection.setAutoCommit(false);
 
+            // this method call is only used to test retry logic.  it is not necessary in production code;
+            forceRetry(connection);
+
             int retryCount = 0;
 
             while (MAX_RETRY_COUNT == 0 || retryCount < MAX_RETRY_COUNT) {
 
                 Savepoint sp = connection.setSavepoint(SAVEPOINT_NAME);
 
-                // this method call is only used to test retry logic.  it is not necessary in production code;
-                forceRetry(connection);
+                try (PreparedStatement statement = connection.prepareStatement(VICTIM_QUERY)) {
+                    statement.setString(1, "i'm a victim");
 
-                try (PreparedStatement statement = connection.prepareStatement("SELECT crdb_internal.force_retry('1s':::INTERVAL)");
-                     final ResultSet resultSet = statement.executeQuery()) {
+                    int updated = statement.executeUpdate();
 
-                    if (resultSet.next()) {
-                        log.debug("query result = [{}]", resultSet.getString(1));
-                    }
+                    log.debug("updated {} records", updated);
 
                     connection.releaseSavepoint(sp);
 
@@ -50,9 +62,10 @@ class BasicExampleDAO {
 
                 } catch (SQLException e) {
 
+                    connection.rollback(sp);
+
                     if (RETRY_SQL_STATE.equals(e.getSQLState())) {
                         log.debug("retryable exception occurred: sql state = [{}], message = [{}], retry counter = {}", e.getSQLState(), e.getMessage(), retryCount);
-                        connection.rollback(sp);
                         retryCount++;
                     } else {
                         throw e;
@@ -68,8 +81,12 @@ class BasicExampleDAO {
     }
 
     private void forceRetry(Connection connection) throws SQLException {
-        try (PreparedStatement statement = connection.prepareStatement("select 1")){
-            statement.executeQuery();
+        try (PreparedStatement statement = connection.prepareStatement(FORCE_RETRY);
+             ResultSet rs = statement.executeQuery()) {
+
+            if (rs.next()) {
+                log.debug("set forceRetry result = [{}]", rs.getString(1));
+            }
         }
     }
 }

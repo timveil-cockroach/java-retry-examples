@@ -10,13 +10,15 @@ class BasicExampleHarness {
         final PGSimpleDataSource ds = new PGSimpleDataSource();
         ds.setServerNames(new String[]{"localhost"});
         ds.setPortNumbers(new int[]{26257});
-        ds.setDatabaseName("java_retry_examples");
-        ds.setApplicationName("java_retry_examples");
+        ds.setDatabaseName("java_retry_example");
+        ds.setApplicationName("basic_example");
         ds.setUser("root");
         ds.setPassword(null);
 
         // Create DAO
         final BasicExampleDAO dao = new BasicExampleDAO(ds);
+
+        dao.createTable();
 
         // Generate Retry
         dao.retryable();
