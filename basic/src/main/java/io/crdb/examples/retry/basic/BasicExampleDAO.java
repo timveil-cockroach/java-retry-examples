@@ -33,7 +33,7 @@ class BasicExampleDAO {
                 Savepoint sp = connection.setSavepoint(SAVEPOINT_NAME);
 
                 // this method call is only used to test retry logic.  it is not necessary in production code;
-                forceRetry(connection);
+                forceRetry(connection, "SELECT 1");
 
                 try (PreparedStatement statement = connection.prepareStatement("SELECT crdb_internal.force_retry('1s':::INTERVAL)");
                      final ResultSet resultSet = statement.executeQuery()) {
@@ -67,9 +67,14 @@ class BasicExampleDAO {
         }
     }
 
-    private void forceRetry(Connection connection) throws SQLException {
-        try (PreparedStatement statement = connection.prepareStatement("select 1")){
-            statement.executeQuery();
+    private void forceRetry(Connection connection, String sql) throws SQLException {
+        try (PreparedStatement statement = connection.prepareStatement(sql);
+            ResultSet resultSet = statement.executeQuery()) {
+
+            if (resultSet.next()) {
+                log.debug("force retry query result = [{}]", resultSet.getString(1));
+            }
+
         }
     }
 }
